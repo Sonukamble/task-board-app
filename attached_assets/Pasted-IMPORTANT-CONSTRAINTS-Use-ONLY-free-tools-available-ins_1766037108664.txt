@@ -1,0 +1,109 @@
+IMPORTANT CONSTRAINTS:
+- Use ONLY free tools available inside this Replit
+- Backend MUST be Python + FastAPI
+- Frontend MUST be React (Vite) + Tailwind CSS
+- No external databases, no paid APIs, no auth
+- App must run fully from the Replit preview URL
+- Keep code simple, readable, Pythonic, and well-structured
+
+GOAL:
+Build a Task Board application that demonstrates:
+- Clean Python backend structure
+- Well-designed REST APIs
+- Smooth frontend ↔ backend integration
+- Visually clean and polished UI
+- Good engineering judgement under a tight timebox
+
+--------------------------------
+BACKEND (FastAPI)
+--------------------------------
+1. Create a FastAPI app with:
+- In-memory task storage (Python list)
+
+2. Define a Task model with:
+- id: int
+- title: str
+- description: str | None (optional guidance for the task)
+- resource_link: str | None (optional helpful link)
+- completed: bool
+- created_at: datetime
+
+3. Expose the following REST APIs:
+- POST /tasks → Add a task (supports optional description & link)
+- GET /tasks → List all tasks
+- PATCH /tasks/{id} → Toggle task completion
+- DELETE /tasks/{id} → Delete a task
+
+
+4. UNIQUE FEATURE (VERY IMPORTANT):
+Implement a **Next Best Action (NBA) Engine**.
+
+- Add a new endpoint:
+- GET /tasks/next
+
+- This endpoint returns ONE recommended task for the user to work on next.
+
+- Decision logic (simple, deterministic, no AI APIs):
+- Consider only incomplete tasks
+- Prefer the oldest task (created_at)
+- If tie, prefer the task with the shortest title
+
+- If no tasks are pending, return `null`
+
+
+5. Keep backend code:
+- Clean
+- Pythonic
+- Well-commented
+- With proper CORS enabled for frontend calls
+
+--------------------------------
+FRONTEND (React + Tailwind)
+--------------------------------
+1. Build a clean single-page UI that includes:
+- Input box for task title
+- Optional expandable section for:
+- Description
+- Resource link
+- “Add Task” button
+
+2. Task list:
+- Show task title
+- Checkbox to mark complete
+- Delete button
+- Expandable “Details” section to view description & link
+
+3. Progress indicator:
+- Percentage or progress bar
+
+4. UNIQUE FEATURE UI:
+- Highlighted card at top:
+🎯 “Next Best Action”
+- Display recommended task title
+- Quick “Mark as Done” action
+
+5. UI requirements:
+- Use Tailwind for clean spacing, layout, and colors
+- Keep components small and readable
+- Maintain visual hierarchy and polish
+- Subtle hover states and transitions are encouraged
+
+--------------------------------
+ENGINEERING & UX GUIDELINES
+--------------------------------
+- Keep UI minimal by default
+- Show extra details only when user expands
+- Avoid clutter
+- One strong insight feature is enough
+- Focus on clarity and polish
+- No unnecessary features
+- Code readability and clarity matter more than feature count
+
+--------------------------------
+DELIVERABLE
+--------------------------------
+- App must run fully from Replit preview
+- Backend and frontend fully integrated
+- NBA feature must update dynamically
+
+Start by setting up the FastAPI backend, then build the React frontend and connect them cleanly.
