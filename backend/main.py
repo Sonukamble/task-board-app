@@ -63,6 +63,7 @@ class TaskListResponse(BaseModel):
 
 tasks_db: list[Task] = []
 next_id: int = 1
+active_task_id: Optional[int] = None
 
 
 # ============================================================================
@@ -125,9 +126,14 @@ def toggle_task(task_id: int):
     
     Flips the completed status from True to False or vice versa.
     """
+    global active_task_id
+    
     for task in tasks_db:
         if task.id == task_id:
             task.completed = not task.completed
+            # If the active task is completed, clear it
+            if active_task_id == task_id and task.completed:
+                active_task_id = None
             return TaskResponse(task=task)
     
     raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
@@ -138,13 +144,17 @@ def delete_task(task_id: int):
     """
     Delete a task by ID.
     """
-    global tasks_db
+    global tasks_db, active_task_id
     
     original_length = len(tasks_db)
     tasks_db = [t for t in tasks_db if t.id != task_id]
     
     if len(tasks_db) == original_length:
         raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
+    
+    # Clear active task if it was deleted
+    if active_task_id == task_id:
+        active_task_id = None
     
     return None
 
@@ -159,14 +169,28 @@ def get_next_best_action():
     Get the recommended next task to work on.
     
     **NBA Decision Logic:**
-    1. Consider only incomplete tasks
-    2. Prefer the oldest task (by created_at)
-    3. If tie, prefer the task with the shortest title
+    1. If active_task_id is set and task is incomplete, return it
+    2. Otherwise, filter incomplete tasks
+    3. Prefer the oldest task (by created_at)
+    4. If tie, prefer the task with the shortest title
     
     Returns null if no pending tasks exist.
     """
-    # Filter incomplete tasks
+    global active_task_id
+    
     pending_tasks = [t for t in tasks_db if not t.completed]
+    
+    # If an active task is set and still incomplete, return it
+    if active_task_id:
+        for task in pending_tasks:
+            if task.id == active_task_id:
+                return {
+                    "task": task,
+                    "message": "This is your focused task (manually selected)",
+                    "is_override": True
+                }
+        # Active task was completed or deleted, clear it
+        active_task_id = None
     
     if not pending_tasks:
         return {"task": None, "message": "No pending tasks. You're all caught up!"}
@@ -179,8 +203,37 @@ def get_next_best_action():
     
     return {
         "task": recommended,
-        "message": "This is your recommended next task based on priority"
+        "message": "This is your recommended next task based on priority",
+        "is_override": False
     }
+
+
+@app.patch("/tasks/next/{task_id}")
+def set_active_task(task_id: int):
+    """
+    Override the Next Best Action by manually selecting a task.
+    """
+    global active_task_id
+    
+    for task in tasks_db:
+        if task.id == task_id and not task.completed:
+            active_task_id = task_id
+            return {
+                "task": task,
+                "message": "Task set as your focus"
+            }
+    
+    raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found or already completed")
+
+
+@app.delete("/tasks/next")
+def clear_active_task():
+    """
+    Clear the active task override and return to NBA engine logic.
+    """
+    global active_task_id
+    active_task_id = None
+    return {"message": "Active task cleared. Back to automatic recommendations."}
 
 
 # ============================================================================

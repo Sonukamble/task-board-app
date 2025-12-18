@@ -87,6 +87,32 @@ function App() {
     }
   }
 
+  const setActiveTask = async (taskId) => {
+    try {
+      const response = await fetch(`${API_BASE}/tasks/next/${taskId}`, {
+        method: 'PATCH'
+      })
+      if (response.ok) {
+        await refreshData()
+      }
+    } catch (error) {
+      console.error('Failed to set active task:', error)
+    }
+  }
+
+  const clearActiveTask = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/tasks/next`, {
+        method: 'DELETE'
+      })
+      if (response.ok) {
+        await refreshData()
+      }
+    } catch (error) {
+      console.error('Failed to clear active task:', error)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -94,6 +120,8 @@ function App() {
       </div>
     )
   }
+
+  const incompleteTasks = tasks.filter(t => !t.completed)
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
@@ -105,7 +133,13 @@ function App() {
 
         <ProgressBar total={stats.total} completed={stats.completed} />
 
-        <NextBestAction task={nextTask} onComplete={toggleTask} />
+        <NextBestAction 
+          task={nextTask} 
+          onComplete={toggleTask}
+          incompleteTasks={incompleteTasks}
+          onSetActive={setActiveTask}
+          onClearActive={clearActiveTask}
+        />
 
         <TaskForm onSubmit={addTask} />
 
